@@ -1,6 +1,19 @@
 {
-  "name": "fep-keepinview",
+  "name": "FEP-KeepInView",
+  "description": "Don't allow elements to scroll out of view by having them stick to the top or bottom of a window of a modern browser. ",
+  "authors": [
+    "C. Egor Kloos"
+  ],
+  "homepage": "https://github.com/dutchcelt/FEP-KeepInView",
   "version": "1.0.0-alpha",
+  "main": [ "dist/fep-keepinview.js", "dist/fep-keepinview.min.js" ],
+  "keywords": [
+    "FE-Patterns",
+    "FEP",
+    "Keepinview",
+    "javascript"
+  ],
+  "license": "GPL v3"
   "dependencies": {},
   "devDependencies": {
     "qunit": "~1.12.0",

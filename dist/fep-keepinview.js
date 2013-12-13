@@ -1,4 +1,4 @@
-/*! fep-keepinview - v1.0.0-alpha - 2013-12-12
+/*! fep-keepinview - v1.0.0-alpha - 2013-12-13
 * https://github.com/dutchcelt/fep-keepinview
 * Copyright (c) 2013 Egor Kloos; Licensed GPL v3 */
 /*! ###########################################################################
@@ -95,38 +95,51 @@
 	};	
 	var addClassName = function( elem, classNameString ){
 		if( !classNameRegEx( classNameString ).test( elem.className ) ) {
-			elem.className += " " + classNameString
+			elem.className += ( ( elem.className === "" ) ? "" : " " )+ classNameString
 		}
 	};	
-	var getDimensions = function( obj ){
-		obj = obj || this.stickyElem.getBoundingClientRect();
-		var dim = {};
-		for( var key in obj ){
-			dim[key] = Math.round( obj[key] );
+	var getDimensions = function( elem, dimObj ){
+
+		dimObj = dimObj || elem.getBoundingClientRect();
+
+		var dims = {};
+
+		var getDim = function( prop ){
+			var val = 0;
+			var propVal = parseInt( getComputedStyle( elem )[prop] );
+			if ( getComputedStyle( elem )[prop].indexOf("rem") > -1 ){
+				 val = ( parseInt( getComputedStyle( document.body )["fontSize"] ) / 16 ) * propVal;
+			} else if ( getComputedStyle( elem )[prop].indexOf("px") < 0 ){
+				 val = ( parseInt( getComputedStyle( elem )["fontSize"] ) / 16 ) * propVal;
+			} else {
+				val = propVal;
+			}
+			return val;
+		}
+		
+		for( var key in dimObj ){
+			dims[key] = Math.round( dimObj[key] );
 			if( key === "top" ){
-				dim[key] = dim[key] - ( parseInt( getComputedStyle( this.stickyElem )["marginTop"] ) || 0 );
+				dims[key] = dims[key] - getDim( "marginTop" );
 			}
 			if( key === "left" ){
-				dim[key] = dim[key] - ( parseInt( getComputedStyle( this.stickyElem )["marginLeft"] ) || 0 );
+				dims[key] = dims[key] - getDim( "marginLeft" );
 			}
+			elem[key] = dims[key];
 		}
-		return dim;
-	}
+		return dims;
+		
+	};
+	
 	var setStyle = function( elem, obj ){
 		for ( var key in obj ) { 
 			elem.style[key] = obj[key]; 
 		}
-	}
-
-	//	Custom events
-	FEP.KeepInView.update = createCustomEvent( "update" );
-	FEP.KeepInView.unstick = createCustomEvent( "unstick" );
-	FEP.KeepInView.set = createCustomEvent( "set" );
-
+	};
 
 	FEP.KeepInView.object = {
 	
-		namespace : "KIV",
+		namespace : "kiv",
 		ticking: false,
 		index : 0,
 		$elem: null,
@@ -186,29 +199,29 @@
 			}
 			var scrolledOutAt = "";
 			var windowHeight = window.innerHeight;
-			var outerHeight = this.box.height;
+			var outerHeight = this.elem.height;
 
-			if( windowHeight < parseInt( this.box.top + this.box.height - Math.abs( window.pageYOffset ) + this.options.edgeOffset, 10 ) && !this.options.fixed ){
+			if( windowHeight < parseInt( this.elem.top + this.elem.height - Math.abs( window.pageYOffset ) + this.options.edgeOffset, 10 ) && !this.options.fixed ){
 				scrolledOutAt = "bottom";
 			}
 
-			if( ( window.pageYOffset ) > this.box.top - this.options.edgeOffset && !this.options.fixed ){
+			if( ( window.pageYOffset ) > this.elem.top - this.options.edgeOffset && !this.options.fixed ){
 				scrolledOutAt = "top";
 			}
 
 			if( !this.options.customClass ){
 
 				if( this.options.scrollable ){
-					this.prepCSS( {height: (windowHeight - this.box.top) + "px", overflow: "auto"} );
+					this.prepCSS( {height: (windowHeight - this.elem.top) + "px", overflow: "auto"} );
 				} else {
 					this.prepCSS();
 
 				}
 				if( scrolledOutAt === "bottom" && (this.options.trigger === 'both' || this.options.trigger === 'bottom') ){
 					if( this.options.scrollable ){
-						this.prepCSS( {height: windowHeight + "px", top: (windowHeight - this.box.height - this.options.edgeOffset) + "px", overflow: "auto" } );
+						this.prepCSS( {height: windowHeight + "px", top: (windowHeight - this.elem.height - this.options.edgeOffset) + "px", overflow: "auto" } );
 					} else {
-						this.fixCSS( (windowHeight - this.box.height - this.options.edgeOffset) );
+						this.fixCSS( (windowHeight - this.elem.height - this.options.edgeOffset) );
 					}
 
 				} else if( scrolledOutAt === "top" && (this.options.trigger === 'both' || this.options.trigger === 'top') ){
@@ -219,10 +232,10 @@
 					}
 
 				} else if( this.options.fixed ){
-					setStyle( this.elem, {top: this.options.edgeOffset + "px", left: this.box.left, height: "auto"} );
+					setStyle( this.elem, {top: this.options.edgeOffset + "px", left: this.elem.left, height: "auto"} );
 				} else {
 					if( this.options.scrollable ){
-						setStyle( this.elem, {position: this.position, top: this.box.top + "px", height: (windowHeight - this.box.top + window.pageYOffset ) + "px"} );
+						setStyle( this.elem, {position: this.position, top: this.elem.top + "px", left: this.elem.left + "px", width: this.elem.width + "px", height: (windowHeight - this.elem.top + window.pageYOffset ) + "px"} );
 					} else {
 						if( this.options.offsetAnchor ){
 							setStyle( this.stickyElem, { visibility: "visible" } );
@@ -253,9 +266,9 @@
 		cssObject: function(){
 			return {
 				position: 'fixed',
-				left: this.box.left + 'px',
-				width: (this.options.scrollable) ? this.box.width - 15 + "px" : this.box.width + "px",
-				height: (this.options.scrollable) ? ( window.innerHeight - this.box.top ) + "px" : this.box.height + "px",
+				left: this.elem.left + 'px',
+				width: (this.options.scrollable) ? this.elem.width + "px" : this.elem.width + "px",
+				height: (this.options.scrollable) ? ( window.innerHeight - this.elem.top ) + "px" : this.elem.height + "px",
 				zIndex:   this.options.zindex
 			}
 		},
@@ -274,40 +287,59 @@
 				}
 			
 		},
+		
+		//	Custom events
+		update: createCustomEvent( "update" ),
+		unstick: createCustomEvent( "unstick" ),
+		set: createCustomEvent( "set" ),
+	
+		staySticky: function(){
+			
+			getDimensions( this.elem );
 
-		staySticky: function( event ){
-			event.preventDefault();
-			this.box = getDimensions.call( this, event.target.getBoundingClientRect() );
 			this.options.clearStyle = true;
 			if(!this.ticking) {
 				requestAnimationFrame( this.setElem.bind( this ) );
 			}
-			this.ticking = true;
 		},
 		
-		setElemRequest : function( event ){
-			event.preventDefault();
+		setElemRequest : function(){
+			addClassName( this.elem, this.namespace + "-" + this.index );
 			this.options.clearStyle = false;
 			if(!this.ticking) {
 				requestAnimationFrame( this.setElem.bind( this ) );
 			}
-			this.ticking = true;
 		},
 
 		killSticky: function(){
-			//	Very nasty hack!
-		    var clone = this.elem.cloneNode(true);
-			clone.removeAttribute( "style" );
-			this.elem.parentNode.replaceChild(clone, this.elem);
+			this.elem.removeEventListener( 'update', this, true );
+			this.elem.removeEventListener( 'set', this, true );
+			this.elem.removeAttribute( "style" );
 		},
+				
+		//	Special object member function:
+		//	http://www.w3.org/TR/DOM-Level-2-Events/events.html#Events-EventListener-handleEvent
 		
-		windowEvent: function( event ){
-			if( event.type === "resize"){
-				this.elem.dispatchEvent( FEP.KeepInView.update );
-			}
-			if( event.type === "scroll"){
-				this.elem.dispatchEvent( FEP.KeepInView.set );
-			}
+		handleEvent: function( event ) {
+		
+			switch(event.type) {
+		    	case 'update':
+		        	this.staySticky();
+					break;
+				case 'set':
+		        	this.setElemRequest();
+					break;
+		        case 'unstick':
+		        	this.killSticky();
+					break;
+		        case 'resize':
+		        	this.elem.dispatchEvent( this.update );
+					break;
+				case 'scroll':
+					this.elem.dispatchEvent( this.set );
+					break;
+		    }
+			this.ticking = true;
 		},
 		
 		anchorShifter : function(){
@@ -346,8 +378,8 @@
 		
 		init: function( f ){
 		
-			this.box = getDimensions.call( this );
-			
+			//getDimensions.call( this.stickyElem );
+			//this.box = getDimensions.call( this );
 			this.options.zindex = getComputedStyle( this.stickyElem )["zIndex"];
 
 			if( this.options.cloned ){
@@ -359,18 +391,20 @@
 				this.elem = this.stickyElem;
 			}
 			
-			this.elem.id = this.namespace + "_" + this.index;
+			getDimensions( this.elem, this.stickyElem.getBoundingClientRect() );
+			
 			this.position = getComputedStyle( this.stickyElem )["position"];
 			
-			this.elem.addEventListener( 'update', this.staySticky.bind(this), true );
-			this.elem.addEventListener( 'unstick', this.killSticky.bind(this), true );
-			this.elem.addEventListener( 'set', this.setElemRequest.bind(this), true );
+			//	"this" triggers the special object member function 'handleEvent'
+			this.elem.addEventListener( 'update', this, true );
+			this.elem.addEventListener( 'unstick', this, true );
+			this.elem.addEventListener( 'set', this, true );
 				
-			window.addEventListener( 'resize', this.windowEvent.bind(this), false );
-			window.addEventListener( 'scroll', this.windowEvent.bind(this), false );
+			window.addEventListener( 'resize', this, true );
+			window.addEventListener( 'scroll', this, true );
 			
 			//	Trigger Keep In View when loaded.
-			this.elem.dispatchEvent( FEP.KeepInView.set );
+			this.elem.dispatchEvent( this.set );
 			
 			this.anchorShifter();
 			
@@ -380,6 +414,7 @@
 		}
 
 	};
+	FEP.KeepInView.unstick = FEP.KeepInView.object.unstick;
 
 
 } ));

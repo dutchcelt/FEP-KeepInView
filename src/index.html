@@ -43,9 +43,9 @@
 	document.onreadystatechange = function () {
 		if ( document.readyState === &quot;complete&quot; ) {
 			FEP.KeepInView( &quot;.help&quot;, { fixed:true, zindex: &quot;42&quot;, edgeOffset: 20 } );
-			FEP.KeepInView( &quot;nav, footer p&quot;);
-			document.querySelector(&quot;button&quot;).onclick = function( event ){
-				document.querySelector(&quot;nav&quot;).dispatchEvent( FEP.KeepInView.unstick );
+			FEP.KeepInView( &quot;nav, footer p&quot; );
+			document.querySelector( &quot;button&quot; ).onclick = function( event ){
+				document.querySelector( &quot;nav&quot; ).dispatchEvent( FEP.KeepInView.unstick );
 			} 
 		}
 	}
