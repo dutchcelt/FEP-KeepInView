@@ -13,7 +13,7 @@
     "Keepinview",
     "javascript"
   ],
-  "license": "GPL v3"
+  "license": "GPL v3",
   "dependencies": {},
   "devDependencies": {
     "qunit": "~1.12.0",

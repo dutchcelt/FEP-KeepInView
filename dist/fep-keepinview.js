@@ -1,4 +1,4 @@
-/*! fep-keepinview - v1.0.0-alpha - 2013-12-13
+/*! fep-keepinview - v1.0.0-alpha - 2013-12-18
 * https://github.com/dutchcelt/fep-keepinview
 * Copyright (c) 2013 Egor Kloos; Licensed GPL v3 */
 /*! ###########################################################################
@@ -98,39 +98,7 @@
 			elem.className += ( ( elem.className === "" ) ? "" : " " )+ classNameString
 		}
 	};	
-	var getDimensions = function( elem, dimObj ){
 
-		dimObj = dimObj || elem.getBoundingClientRect();
-
-		var dims = {};
-
-		var getDim = function( prop ){
-			var val = 0;
-			var propVal = parseInt( getComputedStyle( elem )[prop] );
-			if ( getComputedStyle( elem )[prop].indexOf("rem") > -1 ){
-				 val = ( parseInt( getComputedStyle( document.body )["fontSize"] ) / 16 ) * propVal;
-			} else if ( getComputedStyle( elem )[prop].indexOf("px") < 0 ){
-				 val = ( parseInt( getComputedStyle( elem )["fontSize"] ) / 16 ) * propVal;
-			} else {
-				val = propVal;
-			}
-			return val;
-		}
-		
-		for( var key in dimObj ){
-			dims[key] = Math.round( dimObj[key] );
-			if( key === "top" ){
-				dims[key] = dims[key] - getDim( "marginTop" );
-			}
-			if( key === "left" ){
-				dims[key] = dims[key] - getDim( "marginLeft" );
-			}
-			elem[key] = dims[key];
-		}
-		return dims;
-		
-	};
-	
 	var setStyle = function( elem, obj ){
 		for ( var key in obj ) { 
 			elem.style[key] = obj[key]; 
@@ -142,9 +110,6 @@
 		namespace : "kiv",
 		ticking: false,
 		index : 0,
-		$elem: null,
-		$parent: null,
-		
 		defaults: {
 
 			// Position will be fixed regardless of scroll position when set to true
@@ -184,70 +149,54 @@
 		},
 		
 		options: {},
-		
-		setElem: function(){
+		box: {},
+		toggleElem: function(){
 
 			//  Making sure that $elem doesn't fire if it is taller than the window (like a sidebar)
 			//  To prevent elastic scrolling fireing set the body in css to 'overflow: hidden'.
 			//  Then wrap your content in a div with 'overflow: auto'.
 						
-			if(  this.stickyElem.offsetHeight > window.innerHeight && !this.options.scrollable ){
+			if( this.box.height > window.innerHeight && !this.options.scrollable || this.options.fixed ){
 				return false;
 			}
-			if( this.options.clearStyle ){
-				this.elem.removeAttribute( "style" );
-			}
-			var scrolledOutAt = "";
-			var windowHeight = window.innerHeight;
-			var outerHeight = this.elem.height;
-
-			if( windowHeight < parseInt( this.elem.top + this.elem.height - Math.abs( window.pageYOffset ) + this.options.edgeOffset, 10 ) && !this.options.fixed ){
-				scrolledOutAt = "bottom";
-			}
-
-			if( ( window.pageYOffset ) > this.elem.top - this.options.edgeOffset && !this.options.fixed ){
-				scrolledOutAt = "top";
-			}
-
+			this.elem.scrolledOutAt = false;
+			this.box.top = !this.box.top || this.options.edgeOffset;
+			if( this.options.trigger !== 'bottom' && this.elem.boundry.topOffset - this.options.edgeOffset < window.pageYOffset  ){
+				this.elem.scrolledOutAt = "top";
+			console.log(this.elem.nodeName + ": " + this.elem.scrolledOutAt);
+			} 
+			if( this.options.trigger !== 'top' && window.innerHeight <= this.box.bottom ){
+				this.elem.scrolledOutAt = "bottom";
+			} 
 			if( !this.options.customClass ){
+			
+				if( this.elem.scrolledOutAt !== false ){
 
-				if( this.options.scrollable ){
-					this.prepCSS( {height: (windowHeight - this.elem.top) + "px", overflow: "auto"} );
-				} else {
-					this.prepCSS();
-
-				}
-				if( scrolledOutAt === "bottom" && (this.options.trigger === 'both' || this.options.trigger === 'bottom') ){
-					if( this.options.scrollable ){
-						this.prepCSS( {height: windowHeight + "px", top: (windowHeight - this.elem.height - this.options.edgeOffset) + "px", overflow: "auto" } );
-					} else {
-						this.fixCSS( (windowHeight - this.elem.height - this.options.edgeOffset) );
-					}
-
-				} else if( scrolledOutAt === "top" && (this.options.trigger === 'both' || this.options.trigger === 'top') ){
-					if( this.options.scrollable ){
-						this.prepCSS( { height: windowHeight + "px", top: this.options.edgeOffset + "px", overflow: "auto" } );
-					} else {
-						this.fixCSS( this.options.edgeOffset );
-					}
-
-				} else if( this.options.fixed ){
-					setStyle( this.elem, {top: this.options.edgeOffset + "px", left: this.elem.left, height: "auto"} );
-				} else {
-					if( this.options.scrollable ){
-						setStyle( this.elem, {position: this.position, top: this.elem.top + "px", left: this.elem.left + "px", width: this.elem.width + "px", height: (windowHeight - this.elem.top + window.pageYOffset ) + "px"} );
-					} else {
-						if( this.options.offsetAnchor ){
-							setStyle( this.stickyElem, { visibility: "visible" } );
-							setStyle( this.elem, { display: "none" } );
-						} else {
-							this.elem.removeAttribute( 'style' );
+					if( !this.elem.isSticky ){
+						this.elem.style.position = "fixed";
+						this.elem.style.display = this.elem.orginalRenderedState.display;
+						this.elem.style[this.elem.scrolledOutAt] = this.elem.boundry[this.elem.scrolledOutAt];
+						if( this.options.scrollable ){
+							this.elem.style.top = this.box.top + "px";
+							this.elem.style.height = (window.innerHeight - this.box.top ) + "px";
 						}
+						this.elem.isSticky = true;
+					} 
+					
+				} else {
+					if( this.elem.isSticky ){
+						this.elem.style.position = this.elem.orginalRenderedState.position;
+						this.elem.style.display = ( this.options.cloned ) ? "none" : this.elem.orginalRenderedState.display;
+						this.elem.isSticky = false;
+					} else {
+						if( this.options.scrollable ){
+							this.elem.style.height = ( window.innerHeight - this.box.top) + "px";
+						} 
 					}
 				}
 
 			} else if( this.options.customClass ){
-				if( this.options.trigger === 'both' ){
+				if( this.options.trigger === 'both' ){ 
 					if( scrolledOutAt === "bottom" || scrolledOutAt === "top" ){
 						addClassName( this.elem, this.options.customClass + "-" + scrolledOutAt );
 					} else if( !scrolledOutAt ){
@@ -262,59 +211,96 @@
 			}
 			this.ticking = false;
 		},
+		getDimensions: function( dimObj ){
 		
-		cssObject: function(){
-			return {
-				position: 'fixed',
-				left: this.elem.left + 'px',
-				width: (this.options.scrollable) ? this.elem.width + "px" : this.elem.width + "px",
-				height: (this.options.scrollable) ? ( window.innerHeight - this.elem.top ) + "px" : this.elem.height + "px",
-				zIndex:   this.options.zindex
+			dimObj = dimObj || this.stickyElem.getBoundingClientRect()
+			
+			var dims = {};
+			
+			for( var key in dimObj ){
+				dims[key] = dimObj[key];
 			}
-		},
-		
-		prepCSS: function( cssSettings ){
-				cssObj = Object.create( this.cssObject.call( this ) ); // Add 'defaults' to __proto__
-				for (var key in cssSettings) { cssObj[key] = cssSettings[key]; }
-				setStyle( this.elem, cssObj );
-		},
-		
-		fixCSS: function( t ){
-				this.elem.style.top = t + 'px';
-				if( this.options.offsetAnchor ){
-					this.stickyElem.style.visibility = 'hidden';
-					this.elem.style.display = "block";
-				}
+	
+			return dims;
 			
 		},
+		getDimOffset: function( prop ){
+			var propVal = new Number( getComputedStyle( this.elem )[prop].replace( /\D+$/, "") ).valueOf();
+			return propVal;
+		},
+		renderObject: function(){
+						
+			var marginTop = this.getDimOffset( "marginTop" );
+			var marginBottom = this.getDimOffset( "marginBottom" );
+			var marginLeft = this.getDimOffset( "marginLeft" );
+			var scrollXPos = window.pageXOffset;
+			var scrollYPos = window.pageYOffset;
+			
+			//	resetting view to get initial or new state
+			window.scroll( 0, 0 );
+			this.elem.style.width = null;
+			this.box = this.getDimensions();
+
+			this.elem.boundry = {
+				zIndex : this.options.zindex,
+				display: getComputedStyle( this.elem )["display"],
+				position: ( this.options.cloned ) ? "fixed" : this.elem.orginalRenderedState.position,
+				overflow: ( this.options.scrollable ) ? 'auto' : 'visible',
+				left: this.box.left - marginLeft + "px",
+				width: this.box.width + "px"
+			};
+
+			if( !this.options.fixed ){
+				if( this.options.scrollable ){
+					this.elem.style.height = window.innerHeight - this.box.top - this.options.edgeOffset + "px";
+					this.elem.boundry["top"] = this.box.top + marginTop + "px";
+				} else {
+					this.elem.boundry["height"] = this.box.height + "px";
+				}
+				this.elem.boundry["width"] = this.box.width + "px";
+			} else {
+				this.elem.isSticky = true;
+				this.elem.boundry.position = "fixed";
+				this.elem.boundry.top = this.options.edgeOffset + marginTop + "px";
+			}
+			
+			//	restoring view
+			setStyle( this.elem, this.elem.boundry );
+			this.anchorShifter();
+			
+			//	Setting top and bottom styles
+			this.elem.boundry["top"] = this.options.edgeOffset + marginTop + "px";
+			this.elem.boundry["bottom"] = this.options.edgeOffset + marginBottom + "px";
+			this.elem.boundry["topOffset"] = this.box.top + marginTop;
+			this.elem.boundry["bottomOffset"] = this.box.bottom + marginBottom;
+			//	restoring position
+			window.scroll( scrollXPos, scrollYPos );
+		},
+		
 		
 		//	Custom events
 		update: createCustomEvent( "update" ),
 		unstick: createCustomEvent( "unstick" ),
 		set: createCustomEvent( "set" ),
 	
-		staySticky: function(){
-			
-			getDimensions( this.elem );
+		stickyFunction: function( update ){
 
-			this.options.clearStyle = true;
+			if( update ){
+				this.elem.isSticky = false;
+				this.renderObject();
+			} else {
+				this.box = this.getDimensions();
+			}
 			if(!this.ticking) {
-				requestAnimationFrame( this.setElem.bind( this ) );
+				requestAnimationFrame( this.toggleElem.bind( this ) );
+				this.ticking = true;
 			}
 		},
-		
-		setElemRequest : function(){
-			addClassName( this.elem, this.namespace + "-" + this.index );
-			this.options.clearStyle = false;
-			if(!this.ticking) {
-				requestAnimationFrame( this.setElem.bind( this ) );
-			}
-		},
-
 		killSticky: function(){
 			this.elem.removeEventListener( 'update', this, true );
 			this.elem.removeEventListener( 'set', this, true );
 			this.elem.removeAttribute( "style" );
+			this.elem.isSticky = false;
 		},
 				
 		//	Special object member function:
@@ -322,12 +308,14 @@
 		
 		handleEvent: function( event ) {
 		
+			event.preventDefault();
+			
 			switch(event.type) {
 		    	case 'update':
-		        	this.staySticky();
+		        	this.stickyFunction( true );
 					break;
 				case 'set':
-		        	this.setElemRequest();
+		        	this.stickyFunction( false );
 					break;
 		        case 'unstick':
 		        	this.killSticky();
@@ -339,32 +327,29 @@
 					this.elem.dispatchEvent( this.set );
 					break;
 		    }
-			this.ticking = true;
 		},
 		
 		anchorShifter : function(){
 		
 			if( this.options.offsetAnchor ){
-
+			
 				// It is possible that there a lot of anchors!
 				// Using an array instead of a loop by 'shifting' the array
 				// This speeds up the iterations and setTimeout prevents the browser from locking up.
 
+				var that = this;
+				
 				// put all the dom elements collected by jQuery in to an array
-				var anchorArray = selectorArray( "a[name]" );
-
+				var anchorArray = selectorArray( "a[name]", this.stickyElem.parentNode );
+				var anchor;
+				
 				var arrayShifter = function(){
 
 					var start = +new Date();
-
+					
 					do {
-
-						var anchor = anchorArray.shift();
-						//  Invoke lazyLoad method with the current item
-						if( anchorArray[0] !== void 0 ){
-							$( anchor ).css( { position: "relative", display: "block", top: "-" + this.box.height + "px" } );
-						}
-
+						anchor = anchorArray.shift();
+						setStyle( anchor, { position: "relative", display: "block", top: "-" + that.box.height + "px" } );
 					} while( anchorArray[0] !== void 0 && (+new Date() - start < 50) ); // increase to 100ms if needed.
 
 					if( anchorArray[0] !== void 0 ){
@@ -377,23 +362,23 @@
 		},
 		
 		init: function( f ){
-		
-			//getDimensions.call( this.stickyElem );
-			//this.box = getDimensions.call( this );
-			this.options.zindex = getComputedStyle( this.stickyElem )["zIndex"];
-
+					
 			if( this.options.cloned ){
 				this.elem = this.stickyElem.cloneNode( true );
 				this.stickyElem.parentNode.insertBefore( this.elem, this.stickyElem );
 				addClassName( this.elem, this.namespace + "-cloned" );
 				addClassName( this.stickyElem, this.namespace + "-original" );
+ 				this.elem.style.display = "none";
 			} else {
 				this.elem = this.stickyElem;
 			}
 			
-			getDimensions( this.elem, this.stickyElem.getBoundingClientRect() );
+			this.elem.orginalRenderedState = {
+				position: getComputedStyle( this.elem )["position"],
+				display: getComputedStyle( this.elem )["display"]
+			}
 			
-			this.position = getComputedStyle( this.stickyElem )["position"];
+			addClassName( this.elem, this.namespace + "-" + this.index );
 			
 			//	"this" triggers the special object member function 'handleEvent'
 			this.elem.addEventListener( 'update', this, true );
@@ -403,18 +388,15 @@
 			window.addEventListener( 'resize', this, true );
 			window.addEventListener( 'scroll', this, true );
 			
-			//	Trigger Keep In View when loaded.
-			this.elem.dispatchEvent( this.set );
-			
-			this.anchorShifter();
-			
+			this.elem.dispatchEvent( this.update );
+				
 			if( typeof f === "function"){
 				f( this );
 			}
 		}
 
 	};
-	FEP.KeepInView.unstick = FEP.KeepInView.object.unstick;
 
+	FEP.KeepInView.unstick = FEP.KeepInView.object.unstick;
 
 } ));

@@ -63,10 +63,32 @@ module.exports = function (grunt) {
         src: ['test/**/*.js']
       }
     },
+		// Put files not handled in other tasks here
+		copy  : {
+			dist: {
+				files: [
+					{
+						expand: true,
+						cwd   : 'src',
+						dest  : 'dist',
+						src   : [
+							'polyfills.js',
+							'*.css',
+							'*.html'
+						]
+					}
+
+				]
+			}
+		},
     watch: {
       gruntfile: {
         files: '<%= jshint.gruntfile.src %>',
         tasks: ['jshint:gruntfile']
+      },
+      inert:{
+	      files: ["src/**/*.html","src/**/*.css","src/**/*.js"],
+	      tasks: ["copy:dist","uglify:dist"]
       },
       src: {
         files: '<%= jshint.src.src %>',
@@ -88,6 +110,7 @@ module.exports = function (grunt) {
   });
 
   // These plugins provide necessary tasks.
+  grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-uglify');
@@ -98,7 +121,7 @@ module.exports = function (grunt) {
 
   // Default task.
   //grunt.registerTask('default', ['jshint', 'qunit', 'clean', 'concat', 'uglify']);
-  grunt.registerTask('default', ['clean', 'concat', 'uglify']);
-  grunt.registerTask('server', ['connect', 'watch']);
+  grunt.registerTask('default', ['clean', 'concat', 'uglify', 'copy:dist']);
+  grunt.registerTask('server', ['connect', 'watch:inert']);
   grunt.registerTask('test', ['jshint', 'connect', 'qunit']);
 };
