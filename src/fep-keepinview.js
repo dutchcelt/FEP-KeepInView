@@ -1,7 +1,7 @@
 /*! ###########################################################################
 
  Source: https://github.com/dutchcelt/FEP-KeepInView
- Version: 1.0.0-alpha
+ Version: 1.0.2
 
  Copyright (C) 2011 - 2013,  Lunatech Labs B.V., C. Egor Kloos. All rights reserved.
  GNU General Public License, version 3 (GPL-3.0)
@@ -164,11 +164,11 @@
 			if( this.options.trigger !== 'top' && window.innerHeight <= this.box.bottom ){
 				this.elem.scrolledOutAt = "bottom";
 			} 
-			if( !this.options.customClass ){
 			
-				if( this.elem.scrolledOutAt !== false ){
+			if( this.elem.scrolledOutAt !== false ){
 
-					if( !this.elem.isSticky ){
+				if( !this.elem.isSticky ){
+					if( !this.options.customClass ){
 						this.elem.style.position = "fixed";
 						this.elem.style.display = this.elem.orginalRenderedState.display;
 						this.elem.style[this.elem.scrolledOutAt] = this.elem.boundry[this.elem.scrolledOutAt];
@@ -176,35 +176,28 @@
 							this.elem.style.top = this.box.top + "px";
 							this.elem.style.height = (window.innerHeight - this.box.top ) + "px";
 						}
-						this.elem.isSticky = true;
-					} 
-					
-				} else {
-					if( this.elem.isSticky ){
+					} else {
+						addClassName( this.elem, this.options.customClass + "-" + this.elem.scrolledOutAt );
+					}
+					this.elem.isSticky = true;
+				} 
+			} else {
+				if( this.elem.isSticky ){
+					if( !this.options.customClass ){
 						this.elem.style.position = this.elem.orginalRenderedState.position;
 						this.elem.style.display = ( this.options.cloned ) ? "none" : this.elem.orginalRenderedState.display;
-						this.elem.isSticky = false;
 					} else {
-						if( this.options.scrollable ){
-							this.elem.style.height = ( window.innerHeight - this.box.top) + "px";
-						} 
+						stripClassName( this.options.customClass + "-top", this.elem.parentNode );
+						stripClassName( this.options.customClass + "-bottom", this.elem.parentNode );
 					}
-				}
-
-			} else if( this.options.customClass ){
-				if( this.options.trigger === 'both' ){ 
-					if( scrolledOutAt === "bottom" || scrolledOutAt === "top" ){
-						addClassName( this.elem, this.options.customClass + "-" + scrolledOutAt );
-					} else if( !scrolledOutAt ){
-						stripClassName( this.options.customClass + "-top", this.elem );
-						stripClassName( this.options.customClass + "-bottom", this.elem );
-					}
-				} else if( scrolledOutAt === this.options.trigger ){
-					addClassName( this.elem, this.options.customClass + "-" + this.options.trigger );
-				} else if( !scrolledOutAt ){
-					stripClassName( this.options.customClass + "-" + this.options.trigger, this.elem );
+					this.elem.isSticky = false;
+				} else {
+					if( this.options.scrollable ){
+						this.elem.style.height = ( window.innerHeight - this.box.top) + "px";
+					} 
 				}
 			}
+
 			this.ticking = false;
 		},
 		getDimensions: function( dimObj ){
@@ -259,11 +252,15 @@
 				this.elem.boundry.position = "fixed";
 				this.elem.boundry.top = this.options.edgeOffset + marginTop + "px";
 			}
-			
 			//	restoring view
-			setStyle( this.elem, this.elem.boundry );
-			this.anchorShifter();
+			if( !this.options.customClass ){
+				setStyle( this.elem, this.elem.boundry );
+			}
 			
+			if( this.options.offsetAnchor ){
+				this.anchorShifter();
+			}
+
 			//	Setting top and bottom styles
 			this.elem.boundry["top"] = this.options.edgeOffset + marginTop + "px";
 			this.elem.boundry["bottom"] = this.options.edgeOffset + marginBottom + "px";
@@ -374,7 +371,7 @@
 				display: getComputedStyle( this.stickyElem )["display"]
 			}
 			
-			addClassName( this.elem, this.namespace + "-" + this.index );
+			addClassName( this.elem, ( this.options.customClass ? this.options.customClass : this.namespace + "-" + this.index ) );
 			
 			//	"this" triggers the special object member function 'handleEvent'
 			this.elem.addEventListener( 'update', this, true );

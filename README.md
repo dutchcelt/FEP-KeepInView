@@ -6,8 +6,8 @@ Don't allow elements to scroll out of view by having them stick to the top or bo
 
 Download the [production version][min] or the [development version][max].
 
-[min]: https://raw.github.com/dutchcelt/jquery-fep-keepinview/master/dist/fep-keepinview.min.js
-[max]: https://raw.github.com/dutchcelt/jquery-fep-keepinview/master/dist/fep-keepinview.js
+[min]: https://raw.github.com/dutchcelt/FEP-KeepInView/master/dist/fep-keepinview.min.js
+[max]: https://raw.github.com/dutchcelt/FEP-KeepInView/master/dist/fep-keepinview.js
 
 In your web page:
 

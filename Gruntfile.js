@@ -17,22 +17,12 @@ module.exports = function (grunt) {
     clean: {
       files: ['dist']
     },
-    concat: {
-      options: {
-        banner: '<%= banner %>',
-        stripBanners: true
-      },
-      dist: {
-        src: ['src/<%= pkg.name %>.js'],
-        dest: 'dist/<%= pkg.name %>.js'
-      }
-    },
     uglify: {
       options: {
         banner: '<%= banner %>'
       },
       dist: {
-        src: '<%= concat.dist.dest %>',
+        src: 'src/<%= pkg.name %>.js',
         dest: 'dist/<%= pkg.name %>.min.js'
       }
     },
@@ -72,6 +62,7 @@ module.exports = function (grunt) {
 						cwd   : 'src',
 						dest  : 'dist',
 						src   : [
+							'fep-keepinview.js',
 							'polyfills.js',
 							'*.css',
 							'*.html'
@@ -121,7 +112,7 @@ module.exports = function (grunt) {
 
   // Default task.
   //grunt.registerTask('default', ['jshint', 'qunit', 'clean', 'concat', 'uglify']);
-  grunt.registerTask('default', ['clean', 'concat', 'uglify', 'copy:dist']);
+  grunt.registerTask('default', ['clean', 'uglify', 'copy:dist']);
   grunt.registerTask('server', ['connect', 'watch:inert']);
   grunt.registerTask('test', ['jshint', 'connect', 'qunit']);
 };
