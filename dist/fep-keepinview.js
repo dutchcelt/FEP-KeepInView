@@ -163,7 +163,6 @@
 			this.box.top = !this.box.top || this.options.edgeOffset;
 			if( this.options.trigger !== 'bottom' && this.elem.boundry.topOffset - this.options.edgeOffset < window.pageYOffset  ){
 				this.elem.scrolledOutAt = "top";
-			console.log(this.elem.nodeName + ": " + this.elem.scrolledOutAt);
 			} 
 			if( this.options.trigger !== 'top' && window.innerHeight <= this.box.bottom ){
 				this.elem.scrolledOutAt = "bottom";
@@ -374,8 +373,8 @@
 			}
 			
 			this.elem.orginalRenderedState = {
-				position: getComputedStyle( this.elem )["position"],
-				display: getComputedStyle( this.elem )["display"]
+				position: getComputedStyle( this.stickyElem )["position"],
+				display: getComputedStyle( this.stickyElem )["display"]
 			}
 			
 			addClassName( this.elem, this.namespace + "-" + this.index );
