@@ -5,7 +5,7 @@
     "C. Egor Kloos"
   ],
   "homepage": "https://github.com/dutchcelt/FEP-KeepInView",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": [ "dist/fep-keepinview.js", "dist/fep-keepinview.min.js" ],
   "keywords": [
     "FE-Patterns",

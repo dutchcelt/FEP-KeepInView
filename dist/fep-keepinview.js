@@ -1,7 +1,7 @@
 /*! ###########################################################################
 
  Source: https://github.com/dutchcelt/FEP-KeepInView
- Version: 1.0.2
+ Version: 1.0.3
 
  Copyright (C) 2011 - 2013,  Lunatech Labs B.V., C. Egor Kloos. All rights reserved.
  GNU General Public License, version 3 (GPL-3.0)
@@ -164,7 +164,7 @@
 			if( this.options.trigger !== 'top' && window.innerHeight <= this.box.bottom ){
 				this.elem.scrolledOutAt = "bottom";
 			} 
-			
+						
 			if( this.elem.scrolledOutAt !== false ){
 
 				if( !this.elem.isSticky ){
@@ -193,7 +193,7 @@
 					this.elem.isSticky = false;
 				} else {
 					if( this.options.scrollable ){
-						this.elem.style.height = ( window.innerHeight - this.box.top) + "px";
+						this.elem.style.height = ( window.innerHeight - this.getDimensions().top ) + "px";
 					} 
 				}
 			}
@@ -256,7 +256,6 @@
 			if( !this.options.customClass ){
 				setStyle( this.elem, this.elem.boundry );
 			}
-			
 			if( this.options.offsetAnchor ){
 				this.anchorShifter();
 			}
